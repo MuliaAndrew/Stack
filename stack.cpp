@@ -18,17 +18,19 @@ error_t Stack_Ctor(stack_t* st, size_t capacity)
 
     if(st->def_level >= TWO)
     {
-        st->data = (data_t*)malloc(capacity * sizeof(data_t) + 2 * sizeof(double))
+        st->data = (data_t*)calloc(capacity * sizeof(data_t) + 2 * sizeof(double), 1);
         ptr_ver(st->data);
 
         *((double*) st->data) = LEFT_CANARY;
 
-        st->data = st->data + 2;
+        st->data = (data_t*)((char*)st->data + sizeof(canary_t));
         data_t* temp_ptr = st->data;
         st->data = st->data + capacity;
         *((double*) st->data) = RIGHT_CANARY;
         st->data = temp_ptr;
 
+        if(st->def_level == THREE)
+            st->hash_ = Stack_Hash_Count(st);
     }
     return Stack_Verificator(st);
 }
@@ -195,8 +197,17 @@ error_t Stack_Verificator(stack_t* st)
 
     if(st->def_level >= 2)
     {
-        if(Canary_Verificator(st))
-            return CANARY_ERROR;
+        if(st->l_canary != LEFT_CANARY)
+            return CANARY_ERROR1;
+
+        else if(st->r_canary != RIGHT_CANARY)
+            return CANARY_ERROR2;
+
+        else if(*((canary_t*)st->data - 1) != LEFT_CANARY)
+            return CANARY_ERROR3;
+
+        else if(*((canary_t*)st->data + st->capacity) != RIGHT_CANARY)
+            return CANARY_ERROR4;
 
         if(st->def_level == 3)
         {
@@ -259,15 +270,18 @@ error_t Error_Log(error_t error)
             fwrite_check = fwrite("\n Stack parameters error.\n", sizeof(char), 27, log);
             break;
         }
-        case CANARY_ERROR:
+        case CANARY_ERROR1 || CANARY_ERROR2 || CANARY_ERROR3 || CANARY_ERROR4:
         {
             fwrite_check = fwrite("\n Stack canaries error.\n", sizeof(char), 25, log);
             break;
         }
-        default:
+        case HASH_ERROR:
         {
-            fwrite_check = fwrite("\n Unprocessed error.\n", sizeof(char), 23, log);
+            fwrite_check = fwrite("\n Stack hash error.\n", sizeof(char), 20, log);
+            break;
         }
+        default:
+            fwrite_check = fwrite("\n Unprocessed error.\n", sizeof(char), 23, log);
     }
 
     fclose(log);
@@ -300,17 +314,21 @@ error_t Stack_Interface(stack_t* st)
             scanf("%d", &num);
 
             error = Stack_Push(st, num);
+            printf("error = %d\n", error);
             error = Error_Log(error);
         }
         else if(!(strcmp(cmd, "pop")))
         {
             num = Stack_Pop(st, &error);
+            printf("error = %d\n", error);
             error = Error_Log(error);
 
             printf("%d\n", num);
         }
         else if(!(strcmp(cmd, "ver")))
-            printf("Stack params now: capacity = %d, size_ = %d, def_level = %d\n", st->capacity, st->size_, st->def_level);
+            printf("error = %d\n,"
+                   "Stack params now: capacity = %d, size_ = %d, def_level = %d, "
+                   "hash = %d\n", error, st->capacity, st->size_, st->def_level, st->hash_);
 
         else if(!(strcmp(cmd, "exit")))
             loop = STOP;
@@ -322,27 +340,6 @@ error_t Stack_Interface(stack_t* st)
     }
 
     return Stack_Verificator(st);
-}
-
-error_t Canary_Verificator(stack_t* st)
-{
-    ptr_ver(st);
-
-    if(st->l_canary != LEFT_CANARY)
-        return CANARY_ERROR;
-
-    else if(st->r_canary != RIGHT_CANARY)
-        return CANARY_ERROR;
-
-    else if(*((canary_t*)st->data - 1) != LEFT_CANARY)
-        return CANARY_ERROR;
-
-    else if(*((canary_t*)st->data + st->capacity) != RIGHT_CANARY)
-        return CANARY_ERROR;
-
-    else return NO_ERROR;
-
-    return NO_ERROR;
 }
 
 long Stack_Hash_Count(stack_t* st)
