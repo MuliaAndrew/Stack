@@ -14,15 +14,15 @@
 #endif
 
 #ifndef SET_DEF_LEVEL
-    #define SET_DEF_LEVEL 2
+    #define SET_DEF_LEVEL 3
 #endif
 
 #ifndef LEFT_CANARY
-    #define LEFT_CANARY 111111.111111
+    #define LEFT_CANARY 111111
 #endif
 
 #ifndef RIGHT_CANARY
-    #define RIGHT_CANARY 999999.999999
+    #define RIGHT_CANARY 999999
 #endif
 
 enum defence_level
@@ -57,7 +57,10 @@ enum error_t
     PTR_ERROR     = 15,
     VERIF_ERROR   = 16,
     HASH_ERROR    = 17,
-    CANARY_ERROR  = 32,
+    CANARY_ERROR1 = 21,
+    CANARY_ERROR2 = 22,
+    CANARY_ERROR3 = 23,
+    CANARY_ERROR4 = 24,
     POP_ERROR_NUM = 123456
 };
 
@@ -66,13 +69,13 @@ typedef int canary_t;
 
 struct stack_t
 {
-    canary_t l_canary         = LEFT_CANARY;
+    canary_t l_canary       = LEFT_CANARY;
     data_t* data            = nullptr;
     size_t capacity         = 0;
     size_t size_            = 0;
     long   hash_            = 0;
     defence_level def_level = (defence_level)SET_DEF_LEVEL;
-    canary_t r_canary         = RIGHT_CANARY;
+    canary_t r_canary       = RIGHT_CANARY;
 };
 
 //-----------------------------------------------------------------------------
@@ -94,8 +97,6 @@ error_t Stack_Verificator(stack_t* st);
 error_t Error_Log(error_t error);
 
 error_t Stack_Interface(stack_t* st);
-
-error_t Canary_Verificator(stack_t* st);
 
 long Stack_Hash_Count(stack_t* st);
 
