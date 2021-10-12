@@ -1,7 +1,7 @@
-#include "stack.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "stack.h"
 //#include "Txlib.h"
 
 #define SET_DEF_LEVEL 2
